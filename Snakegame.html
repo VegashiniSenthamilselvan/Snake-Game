@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
+        * {
+            box-sizing: border-box;
+            background: url("b7.jpg") no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        body {
+            font-family: "Roboto";
+            flex-direction: column;
+            margin: -10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        h1 {
+            margin-top: 10px;
+            font-size: 87px;
+            color: white;
+        }
+
+        #score {
+            font-size: 24px;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <h1>Snake Game</h1>
+    <div id="score">Score: 0</div>
+    <canvas id="playground"></canvas>
+
+    <script>
+        let playground;
+        let rows = 17;
+        let cols = 17;
+        let unitSize = 25;
+        let context;
+        let movementX = 0;
+        let movementY = 0;
+        let movesPerSec = 8;
+        let playerBody = [];
+        let gameOver = false;
+        let interval;
+        let score = 0; // Add a variable to keep track of the score
+
+        const snakeHeadImg = new Image();
+        snakeHeadImg.src = "./snake.svg"; // Update the path to where you saved the snakeHead.svg
+
+        const fruitImg = new Image();
+        fruitImg.src = "./fruit.svg";
+
+        const snakeBody = new Image();
+        snakeBody.src = "./snakeBody.svg";
+
+        window.onload = function () {
+            playground = document.getElementById("playground");
+            playground.width = cols * unitSize;
+            playground.height = rows * unitSize;
+            context = playground.getContext("2d");
+            document.addEventListener("keydown", changeDir);
+            spawnFood();
+            interval = setInterval(draw, 1000 / movesPerSec);
+        };
+
+        let playerX = Math.floor(Math.random() * 10) * unitSize;
+        let playerY = Math.floor(Math.random() * 10) * unitSize;
+
+        let foodX;
+        let foodY;
+
+        function spawnFood() {
+            foodX = Math.floor(Math.random() * 10) * unitSize;
+            foodY = Math.floor(Math.random() * 10) * unitSize;
+        }
+
+        function draw() {
+            // Clear the canvas
+            context.clearRect(0, 0, playground.width, playground.height);
+
+            // Draw the food
+            context.drawImage(fruitImg, foodX, foodY, unitSize, unitSize);
+
+            // Update the snake's body position
+            if (playerX === foodX && playerY === foodY) {
+                playerBody.push([foodX, foodY]);
+                spawnFood();
+                score++; // Increment score when food is eaten
+                document.getElementById("score").innerText = "Score: " + score; // Update score display
+            }
+
+            for (let i = playerBody.length - 1; i > 0; i--) {
+                playerBody[i] = playerBody[i - 1];
+            }
+            if (playerBody.length) {
+                playerBody[0] = [playerX, playerY];
+            }
+
+            // Move the snake
+            playerX += movementX * unitSize;
+            playerY += movementY * unitSize;
+            context.drawImage(snakeHeadImg, playerX, playerY, unitSize, unitSize);
+
+            // Draw the snake's body
+            for (let i = 0; i < playerBody.length; i++) {
+                context.drawImage(
+                    snakeBody,
+                    playerBody[i][0],
+                    playerBody[i][1],
+                    unitSize,
+                    unitSize
+                );
+            }
+
+            // Check for collisions
+            if (
+                playerX < 0 ||
+                playerY < 0 ||
+                playerX >= cols * unitSize ||
+                playerY >= rows * unitSize
+            ) {
+                gameOver = true;
+            }
+
+            for (let i = 0; i < playerBody.length; i++) {
+                if (playerX == playerBody[i][0] && playerY == playerBody[i][1]) {
+                    gameOver = true;
+                }
+            }
+            if (gameOver === true) {
+                clearInterval(interval);
+                alert("Game Over! Your score was: " + score); // Show final score
+                location.reload();
+            }
+        }
+
+        function changeDir(e) {
+            if (e.code === "ArrowUp" && movementY != 1) {
+                movementY = -1;
+                movementX = 0;
+            } else if (e.code === "ArrowRight" && movementX != -1) {
+                movementY = 0;
+                movementX = 1;
+            } else if (e.code === "ArrowDown" && movementY != -1) {
+                movementY = 1;
+                movementX = 0;
+            } else if (e.code === "ArrowLeft" && movementX != 1) {
+                movementY = 0;
+                movementX = -1;
+            }
+        }
+    </script>
+</body>
+</html>
